@@ -19,11 +19,11 @@
 #define STRING_CONFIG_H_AUTHOR "Adrian/Lawsy/Rincewind/Tealvince" // Who made the changes.
 
 // change to 3 for SD3 //{SD Patch}
-#define SOLIDOODLE_VERSION 3 //{SD Patch}
+#define SOLIDOODLE_VERSION 2 //{SD Patch}
 
 // Enable support for either of the Z-Wobble Solutions
 //#define ZWOBBLE_PATCH //{SD Patch} (+5528 Bytes)
-//#define HYSTERESIS_PATCH //{SD Patch}(+1592 Bytes)
+#define HYSTERESIS_PATCH //{SD Patch}(+1592 Bytes)
 
 // SERIAL_PORT selects which serial port should be used for communication with the host.
 // This allows the connection of wireless adapters (for instance) to non-default port pins.
@@ -32,7 +32,8 @@
 
 // This determines the communication speed of the printer
 // This determines the communication speed of the printer
-#define BAUDRATE 250000
+//#define BAUDRATE 250000
+#define BAUDRATE 115200
 
 // This enables the serial port associated to the Bluetooth interface
 //#define BTENABLED              // Enable BT interface on AT90USB devices
@@ -158,7 +159,7 @@
 // When temperature exceeds max temp, your heater will be switched off.
 // This feature exists to protect your hotend from overheating accidentally, but *NOT* from thermistor short/failure!
 // You should use MINTEMP for thermistor short/failure protection.
-#define HEATER_0_MAXTEMP 230	//{SD Patch}
+#define HEATER_0_MAXTEMP 250	//{SD Patch}
 #define HEATER_1_MAXTEMP 275
 #define HEATER_2_MAXTEMP 275
 #define BED_MAXTEMP 150	//{SD Patch}
@@ -189,9 +190,9 @@
 //    #define  DEFAULT_Kd 114
 //
 // Solidoodle
-    #define  DEFAULT_Kp 15.44
-    #define  DEFAULT_Ki 0.51
-    #define  DEFAULT_Kd 116.62
+    #define  DEFAULT_Kp 19.92
+    #define  DEFAULT_Ki 1.52
+    #define  DEFAULT_Kd 65.4
 //
 // Makergear
 //    #define  DEFAULT_Kp 7.0
@@ -339,26 +340,26 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define Z_HOME_DIR -1
 
 #define min_software_endstops false // If true, axis won't move to coordinates less than HOME_POS. {SD Patch}
-#define max_software_endstops false  // If true, axis won't move to coordinates greater than the defined lengths below. {SD Patch}
+#define max_software_endstops true  // If true, axis won't move to coordinates greater than the defined lengths below. {SD Patch}
 
 //============================= Bed Auto Leveling ===========================
 
-//#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
+#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
 
 #ifdef ENABLE_AUTO_BED_LEVELING
 
   // these are the positions on the bed to do the probing
-  #define LEFT_PROBE_BED_POSITION 15
-  #define RIGHT_PROBE_BED_POSITION 170
-  #define BACK_PROBE_BED_POSITION 180
+  #define LEFT_PROBE_BED_POSITION 10
+  #define RIGHT_PROBE_BED_POSITION 110
+  #define BACK_PROBE_BED_POSITION 140
   #define FRONT_PROBE_BED_POSITION 20
 
   // these are the offsets to the prob relative to the extruder tip (Hotend - Probe)
-  #define X_PROBE_OFFSET_FROM_EXTRUDER -25
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER -29
-  #define Z_PROBE_OFFSET_FROM_EXTRUDER -12.35
+  #define X_PROBE_OFFSET_FROM_EXTRUDER -41.9
+  #define Y_PROBE_OFFSET_FROM_EXTRUDER -10.4
+  #define Z_PROBE_OFFSET_FROM_EXTRUDER -6.3
 
-  #define Z_RAISE_BEFORE_HOMING 4       // (in mm) Raise Z before homing (G28) for Probe Clearance.
+  #define Z_RAISE_BEFORE_HOMING 8       // (in mm) Raise Z before homing (G28) for Probe Clearance.
                                         // Be sure you have this distance over your Z_MAX_POS in case
     
   #define XY_TRAVEL_SPEED 8000         // X and Y axis travel speed between probes, in mm/min
@@ -371,7 +372,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
   //The value is the delay to turn the servo off after powered on - depends on the servo speed; 300ms is good value, but you can try lower it.
   // You MUST HAVE the SERVO_ENDSTOPS defined to use here a value higher than zero otherwise your code will not compile.
 
-//  #define PROBE_SERVO_DEACTIVATION_DELAY 300  
+  #define PROBE_SERVO_DEACTIVATION_DELAY 300  
 
 
 //If you have enabled the Bed Auto Levelling and are using the same Z Probe for Z Homing, 
@@ -442,17 +443,13 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 //###############################
 //{SD Patch} END
 
-
-
-//{SD Patch} END
-
 //// MOVEMENT SETTINGS
 #define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
 #define HOMING_FEEDRATE {50*60, 50*60, 4*60, 0}  // set the homing speeds (mm/min)
 
 // default settings
 
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {88,88,2268,138}  // default steps per unit for Ultimaker {SD Patch}
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {88,88,4000,108.3}  // default steps per unit for Ultimaker {SD Patch}
 #define DEFAULT_MAX_FEEDRATE          {500, 500, 5, 45}    // (mm/sec) {SD Patch}
 #define DEFAULT_MAX_ACCELERATION      {1200,1200,100,10000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot. {SD Patch}
 
@@ -710,15 +707,15 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // leaving it undefined or defining as 0 will disable the servo subsystem
 // If unsure, leave commented / disabled
 //
-//#define NUM_SERVOS 3 // Servo index starts with 0 for M280 command
+#define NUM_SERVOS 1 // Servo index starts with 0 for M280 command
 
 // Servo Endstops
 //
 // This allows for servo actuated endstops, primary usage is for the Z Axis to eliminate calibration or bed height changes.
 // Use M206 command to correct for switch height offset to actual nozzle height. Store that setting with M500.
 //
-//#define SERVO_ENDSTOPS {-1, -1, 0} // Servo index for X, Y, Z. Disable with -1
-//#define SERVO_ENDSTOP_ANGLES {0,0, 0,0, 70,0} // X,Y,Z Axis Extend and Retract angles
+#define SERVO_ENDSTOPS {-1, -1, 0} // Servo index for X, Y, Z. Disable with -1
+#define SERVO_ENDSTOP_ANGLES {0,0, 0,0, 110,180} // X,Y,Z Axis Extend and Retract angles
 
 #include "Configuration_adv.h"
 #include "thermistortables.h"

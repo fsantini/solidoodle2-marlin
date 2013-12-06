@@ -993,9 +993,15 @@
 
 #define LED_PIN            -1
 
-#define FAN_PIN            -1
+#define FAN_PIN            4
  #if FAN_PIN == 12 || FAN_PIN ==13
   #define FAN_SOFT_PWM
+#endif
+
+#define FAN_SOFT_PWM
+
+#ifdef NUM_SERVOS
+    #define SERVO0_PIN         27
 #endif
 
 #ifdef MELZI

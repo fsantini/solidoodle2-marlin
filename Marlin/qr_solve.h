@@ -1,3 +1,7 @@
+#include "Configuration.h"
+
+#ifdef ACCURATE_BED_LEVELING
+
 void daxpy ( int n, double da, double dx[], int incx, double dy[], int incy );
 double ddot ( int n, double dx[], int incx, double dy[], int incy );
 double dnrm2 ( int n, double x[], int incx );
@@ -14,3 +18,5 @@ int dqrsl ( double a[], int lda, int n, int k, double qraux[], double y[],
 void dscal ( int n, double sa, double x[], int incx );
 void dswap ( int n, double x[], int incx, double y[], int incy );
 double *qr_solve ( int m, int n, double a[], double b[] );
+
+#endif

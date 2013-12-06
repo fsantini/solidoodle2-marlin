@@ -1,10 +1,53 @@
-//# include <stdlib.h>
-//# include <stdio.h>
-# include <math.h>
-# include <time.h>
+#include "qr_solve.h"
 
-# include "qr_solve.h"
+#ifdef ACCURATE_BED_LEVELING
+
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+
+
 //# include "r8lib.h"
+
+int i4_min ( int i1, int i2 )
+
+/******************************************************************************/
+/*
+  Purpose:
+
+    I4_MIN returns the smaller of two I4's.
+
+  Licensing:
+
+    This code is distributed under the GNU LGPL license.
+
+  Modified:
+
+    29 August 2006
+
+  Author:
+
+    John Burkardt
+
+  Parameters:
+
+    Input, int I1, I2, two integers to be compared.
+
+    Output, int I4_MIN, the smaller of I1 and I2.
+*/
+{
+  int value;
+
+  if ( i1 < i2 )
+  {
+    value = i1;
+  }
+  else
+  {
+    value = i2;
+  }
+  return value;
+}
 
 double r8_epsilon ( void )
 
@@ -44,6 +87,46 @@ double r8_epsilon ( void )
   return value;
 }
 
+double r8_max ( double x, double y )
+
+/******************************************************************************/
+/*
+  Purpose:
+
+    R8_MAX returns the maximum of two R8's.
+
+  Licensing:
+
+    This code is distributed under the GNU LGPL license.
+
+  Modified:
+
+    07 May 2006
+
+  Author:
+
+    John Burkardt
+
+  Parameters:
+
+    Input, double X, Y, the quantities to compare.
+
+    Output, double R8_MAX, the maximum of X and Y.
+*/
+{
+  double value;
+
+  if ( y < x )
+  {
+    value = x;
+  }
+  else
+  {
+    value = y;
+  }
+  return value;
+}
+
 double r8_abs ( double x )
 
 /******************************************************************************/
@@ -80,6 +163,101 @@ double r8_abs ( double x )
   else
   {
     value = - x;
+  }
+  return value;
+}
+
+double r8_sign ( double x )
+
+/******************************************************************************/
+/*
+  Purpose:
+
+    R8_SIGN returns the sign of an R8.
+
+  Licensing:
+
+    This code is distributed under the GNU LGPL license.
+
+  Modified:
+
+    08 May 2006
+
+  Author:
+
+    John Burkardt
+
+  Parameters:
+
+    Input, double X, the number whose sign is desired.
+
+    Output, double R8_SIGN, the sign of X.
+*/
+{
+  double value;
+
+  if ( x < 0.0 )
+  {
+    value = - 1.0;
+  }
+  else
+  {
+    value = + 1.0;
+  }
+  return value;
+}
+
+double r8mat_amax ( int m, int n, double a[] )
+
+/******************************************************************************/
+/*
+  Purpose:
+
+    R8MAT_AMAX returns the maximum absolute value entry of an R8MAT.
+
+  Discussion:
+
+    An R8MAT is a doubly dimensioned array of R8 values, stored as a vector
+    in column-major order.
+
+  Licensing:
+
+    This code is distributed under the GNU LGPL license.
+
+  Modified:
+
+    07 September 2012
+
+  Author:
+
+    John Burkardt
+
+  Parameters:
+
+    Input, int M, the number of rows in A.
+
+    Input, int N, the number of columns in A.
+
+    Input, double A[M*N], the M by N matrix.
+
+    Output, double R8MAT_AMAX, the maximum absolute value entry of A.
+*/
+{
+  int i;
+  int j;
+  double value;
+
+  value = r8_abs ( a[0+0*m] );
+
+  for ( j = 0; j < n; j++ )
+  {
+    for ( i = 0; i < m; i++ )
+    {
+      if ( value < r8_abs ( a[i+j*m] ) )
+      {
+        value = r8_abs ( a[i+j*m] );
+      }
+    }
   }
   return value;
 }
@@ -1750,3 +1928,5 @@ double *qr_solve ( int m, int n, double a[], double b[] )
   return x;
 }
 /******************************************************************************/
+
+#endif

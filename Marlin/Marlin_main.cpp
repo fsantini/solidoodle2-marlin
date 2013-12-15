@@ -816,13 +816,9 @@ static void set_bed_level_equation_lsq(double *plane_equation_coefficients)
     plan_bed_level_matrix = matrix_3x3::create_look_at(planeNormal);
     //bedLevel.debug("bedLevel");
 
-    plan_bed_level_matrix.debug("bed level before");
+    //plan_bed_level_matrix.debug("bed level before");
     //vector_3 uncorrected_position = plan_get_position_mm();
     //uncorrected_position.debug("position before");
-
-    // and set our bed level equation to do the right thing
-//    plan_bed_level_matrix = matrix_3x3::create_inverse(bedLevel);
-//    plan_bed_level_matrix.debug("bed level after");
 
     vector_3 corrected_position = plan_get_position();
 //    corrected_position.debug("position after");
@@ -831,7 +827,7 @@ static void set_bed_level_equation_lsq(double *plane_equation_coefficients)
     current_position[Z_AXIS] = corrected_position.z;
 
     // but the bed at 0 so we don't go below it.
-    current_position[Z_AXIS] = -Z_PROBE_OFFSET_FROM_EXTRUDER; // in the lsq we reach here after raising the extruder due to the loop structure
+    current_position[Z_AXIS] = -Z_PROBE_OFFSET_FROM_EXTRUDER;
 
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 }
@@ -1391,10 +1387,26 @@ void process_commands()
             
             
             int probePointCounter = 0;
+            bool zig = true;
             
-            for (int xProbe=LEFT_PROBE_BED_POSITION; xProbe <= RIGHT_PROBE_BED_POSITION; xProbe += xGridSpacing)
+            for (int yProbe=FRONT_PROBE_BED_POSITION; yProbe <= BACK_PROBE_BED_POSITION; yProbe += yGridSpacing)
             {
-              for (int yProbe=FRONT_PROBE_BED_POSITION; yProbe <= BACK_PROBE_BED_POSITION; yProbe += yGridSpacing)
+              int xProbe, xInc;
+              if (zig)
+              {
+                xProbe = LEFT_PROBE_BED_POSITION;
+                //xEnd = RIGHT_PROBE_BED_POSITION;
+                xInc = xGridSpacing;
+                zig = false;
+              } else // zag
+              {
+                xProbe = RIGHT_PROBE_BED_POSITION;
+                //xEnd = LEFT_PROBE_BED_POSITION;
+                xInc = -xGridSpacing;
+                zig = true;
+              }
+              
+              for (int xCount=0; xCount < ACCURATE_BED_LEVELING_POINTS; xCount++)
               {
                 if (probePointCounter == 0)
                 {
@@ -1426,6 +1438,7 @@ void process_commands()
                 eqnAMatrix[probePointCounter + 1*ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS] = yProbe;
                 eqnAMatrix[probePointCounter + 2*ACCURATE_BED_LEVELING_POINTS*ACCURATE_BED_LEVELING_POINTS] = 1;
                 probePointCounter++;
+                xProbe += xInc;
               }
             }
             clean_up_after_endstop_move();

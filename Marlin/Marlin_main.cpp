@@ -55,7 +55,7 @@
 
 #ifdef BLINKM
 #include "BlinkM.h"
-#include "Wire.h" 
+#include "Wire.h"
 #endif
 
 #if NUM_SERVOS > 0
@@ -104,7 +104,7 @@
 // M29  - Stop SD write
 // M30  - Delete file from SD (M30 filename.g)
 // M31  - Output time since last M109 or SD card start to serial
-// M32  - Select file and start SD print (Can be used _while_ printing from SD card files): 
+// M32  - Select file and start SD print (Can be used _while_ printing from SD card files):
 //        syntax "M32 /path/filename#", or "M32 S<startpos bytes> !filename#"
 //        Call gcode file : "M32 P !filename#" and return to caller file after finishing (simiarl to #include).
 //        The '#' is necessary when calling from within sd files, as it stops buffer prereading
@@ -201,6 +201,7 @@ float endstop_adj[3]={0,0,0};
 float min_pos[3] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS };
 float max_pos[3] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS };
 bool axis_known_position[3] = {false, false, false};
+float zprobe_zoffset;
 
 // Extruder offset
 #if EXTRUDERS > 1
@@ -234,13 +235,18 @@ int EtoPPressure=0;
 #endif
 
 #ifdef ULTIPANEL
-	bool powersupply = true;
+  #ifdef PS_DEFAULT_OFF
+    bool powersupply = false;
+  #else
+	  bool powersupply = true;
+  #endif
 #endif
 
 #ifdef DELTA
 float delta[3] = {0.0, 0.0, 0.0};
 #endif
 
+  
 //===========================================================================
 //=============================private variables=============================
 //===========================================================================
@@ -423,7 +429,7 @@ void servo_init()
 
   #if defined (ENABLE_AUTO_BED_LEVELING) && (PROBE_SERVO_DEACTIVATION_DELAY > 0)
   delay(PROBE_SERVO_DEACTIVATION_DELAY);
-  servos[servo_endstops[Z_AXIS]].detach();  
+  servos[servo_endstops[Z_AXIS]].detach();
   #endif
 }
 
@@ -644,17 +650,17 @@ void get_command()
   if(!card.sdprinting || serial_count!=0){
     return;
   }
-  
+
   //'#' stops reading from sd to the buffer prematurely, so procedural macro calls are possible
-  // if it occures, stop_buffering is triggered and the buffer is ran dry. 
+  // if it occures, stop_buffering is triggered and the buffer is ran dry.
   // this character _can_ occure in serial com, due to checksums. however, no checksums are used in sd printing
-  
+
   static bool stop_buffering=false;
   if(buflen==0) stop_buffering=false;
-  
-  while( !card.eof()  && buflen < BUFSIZE && !stop_buffering) { 
+
+  while( !card.eof()  && buflen < BUFSIZE && !stop_buffering) {
     int16_t n=card.get();
-    serial_char = (char)n; 
+    serial_char = (char)n;
     if(serial_char == '\n' ||
        serial_char == '\r' ||
        (serial_char == '#' && comment_mode == false) ||
@@ -679,7 +685,7 @@ void get_command()
       }
       if(serial_char=='#')
         stop_buffering=true;
-      
+
       if(!serial_count)
       {
         comment_mode = false; //for new command
@@ -751,13 +757,13 @@ XYZ_CONSTS_FROM_CONFIG(signed char, home_dir,  HOME_DIR);
   #endif
   #if X_HOME_DIR != -1 || X2_HOME_DIR != 1
     #error "Please use canonical x-carriage assignment" // the x-carriages are defined by their homing directions
-  #endif  
+  #endif
 
 #define DXC_FULL_CONTROL_MODE 0
 #define DXC_AUTO_PARK_MODE    1
 #define DXC_DUPLICATION_MODE  2
 static int dual_x_carriage_mode = DEFAULT_DUAL_X_CARRIAGE_MODE;
- 
+
 static float x_home_pos(int extruder) {
   if (extruder == 0)
     return base_home_pos(X_AXIS) + add_homeing[X_AXIS];
@@ -775,8 +781,8 @@ static int x_home_dir(int extruder) {
 
 static float inactive_extruder_x_pos = X2_MAX_POS; // used in mode 0 & 1
 static bool active_extruder_parked = false; // used in mode 1 & 2
-static float raised_parked_position[NUM_AXIS]; // used in mode 1 
-static unsigned long delayed_move_time = 0; // used in mode 1 
+static float raised_parked_position[NUM_AXIS]; // used in mode 1
+static unsigned long delayed_move_time = 0; // used in mode 1
 static float duplicate_extruder_x_offset = DEFAULT_DUPLICATION_X_OFFSET; // used in mode 2
 static float duplicate_extruder_temp_offset = 0; // used in mode 2
 bool extruder_duplication_enabled = false; // used in mode 2
@@ -825,7 +831,7 @@ static void set_bed_level_equation_lsq(double *plane_equation_coefficients)
     current_position[Z_AXIS] = corrected_position.z;
 
     // but the bed at 0 so we don't go below it.
-    current_position[Z_AXIS] = -Z_PROBE_OFFSET_FROM_EXTRUDER;
+    current_position[Z_AXIS] = zprobe_zoffset; // in the lsq we reach here after raising the extruder due to the loop structure
 
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 }
@@ -862,7 +868,7 @@ static void set_bed_level_equation(float z_at_xLeft_yFront, float z_at_xRight_yF
     current_position[Z_AXIS] = corrected_position.z;
 
     // but the bed at 0 so we don't go below it.
-    current_position[Z_AXIS] = -Z_PROBE_OFFSET_FROM_EXTRUDER;
+    current_position[Z_AXIS] = zprobe_zoffset;
 
     plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
 }
@@ -1329,7 +1335,7 @@ void process_commands()
       }
       #ifdef ENABLE_AUTO_BED_LEVELING
         if((home_all_axis) || (code_seen(axis_codes[Z_AXIS]))) {
-          current_position[Z_AXIS] -= Z_PROBE_OFFSET_FROM_EXTRUDER;  //Add Z_Probe offset (the distance is negative)
+          current_position[Z_AXIS] += zprobe_zoffset;  //Add Z_Probe offset (the distance is negative)
         }
       #endif
       plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[E_AXIS]);
@@ -2797,6 +2803,15 @@ void process_commands()
         if(code_seen('B')) digipot_current(4,code_value());
         if(code_seen('S')) for(int i=0;i<=4;i++) digipot_current(i,code_value());
       #endif
+      #ifdef MOTOR_CURRENT_PWM_XY_PIN
+        if(code_seen('X')) digipot_current(0, code_value());
+      #endif
+      #ifdef MOTOR_CURRENT_PWM_Z_PIN
+        if(code_seen('Z')) digipot_current(1, code_value());
+      #endif
+      #ifdef MOTOR_CURRENT_PWM_E_PIN
+        if(code_seen('E')) digipot_current(2, code_value());
+      #endif
     }
     break;
     case 908: // M908 Control digital trimpot directly.
@@ -3306,8 +3321,8 @@ void manage_inactivity()
      enable_e0();
      float oldepos=current_position[E_AXIS];
      float oldedes=destination[E_AXIS];
-     plan_buffer_line(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS],
-                      current_position[E_AXIS]+EXTRUDER_RUNOUT_EXTRUDE*EXTRUDER_RUNOUT_ESTEPS/axis_steps_per_unit[E_AXIS],
+     plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], 
+                      destination[E_AXIS]+EXTRUDER_RUNOUT_EXTRUDE*EXTRUDER_RUNOUT_ESTEPS/axis_steps_per_unit[E_AXIS], 
                       EXTRUDER_RUNOUT_SPEED/60.*EXTRUDER_RUNOUT_ESTEPS/axis_steps_per_unit[E_AXIS], active_extruder);
      current_position[E_AXIS]=oldepos;
      destination[E_AXIS]=oldedes;

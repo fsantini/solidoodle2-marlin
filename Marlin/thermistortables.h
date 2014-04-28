@@ -860,6 +860,7 @@ const short temptable_60[][2] PROGMEM = {
 //{SD Patch} Start
 //#######################
 #if (THERMISTORHEATER_0 == 80) || (THERMISTORHEATER_1 == 80) || (THERMISTORHEATER_2 == 80) || (THERMISTORBED == 80) // QU-BD silicone bed QWG-104F-3950 thermistor
+/*
 const short temptable_80[][2] PROGMEM = {
         {1*OVERSAMPLENR,        938},
         {31*OVERSAMPLENR,       314},
@@ -911,6 +912,60 @@ const short temptable_80[][2] PROGMEM = {
         {991*OVERSAMPLENR,      17},
         {1001*OVERSAMPLENR,     9},
         {1021*OVERSAMPLENR,     -27}
+};*/
+
+// FS patch
+const short temptable_80[][2] PROGMEM = {
+{       1       *OVERSAMPLENR,  1102.781        },
+{       31      *OVERSAMPLENR,  363.653         },
+{       41      *OVERSAMPLENR,  335.225         },
+{       51      *OVERSAMPLENR,  313.904         },
+{       61      *OVERSAMPLENR,  297.321         },
+{       71      *OVERSAMPLENR,  284.2915        },
+{       81      *OVERSAMPLENR,  272.4465        },
+{       91      *OVERSAMPLENR,  262.9705        },
+{       101     *OVERSAMPLENR,  253.4945        },
+{       111     *OVERSAMPLENR,  246.3875        },
+{       121     *OVERSAMPLENR,  239.2805        },
+{       131     *OVERSAMPLENR,  233.358         },
+{       141     *OVERSAMPLENR,  227.4355        },
+{       151     *OVERSAMPLENR,  222.6975        },
+{       161     *OVERSAMPLENR,  216.775         },
+{       171     *OVERSAMPLENR,  213.2215        },
+{       181     *OVERSAMPLENR,  208.4835        },
+{       191     *OVERSAMPLENR,  203.7455        },
+{       201     *OVERSAMPLENR,  200.192         },
+{       221     *OVERSAMPLENR,  193.085         },
+{       241     *OVERSAMPLENR,  187.1625        },
+{       261     *OVERSAMPLENR,  181.24          },
+{       281     *OVERSAMPLENR,  175.3175        },
+{       301     *OVERSAMPLENR,  169.395         },
+{       331     *OVERSAMPLENR,  162.288         },
+{       361     *OVERSAMPLENR,  156.3655        },
+{       391     *OVERSAMPLENR,  149.2585        },
+{       421     *OVERSAMPLENR,  143.336         },
+{       451     *OVERSAMPLENR,  137.4135        },
+{       491     *OVERSAMPLENR,  130.3065        },
+{       531     *OVERSAMPLENR,  123.1995        },
+{       571     *OVERSAMPLENR,  116.0925        },
+{       611     *OVERSAMPLENR,  110.17          },
+{       641     *OVERSAMPLENR,  104.2475        },
+{       681     *OVERSAMPLENR,  98.325          },
+{       711     *OVERSAMPLENR,  92.4025         },
+{       751     *OVERSAMPLENR,  85.2955         },
+{       791     *OVERSAMPLENR,  77.004          },
+{       811     *OVERSAMPLENR,  73.4505         },
+{       831     *OVERSAMPLENR,  68.7125         },
+{       871     *OVERSAMPLENR,  59.2365         },
+{       881     *OVERSAMPLENR,  56.8675         },
+{       901     *OVERSAMPLENR,  52.1295         },
+{       921     *OVERSAMPLENR,  45.0225         },
+{       941     *OVERSAMPLENR,  37.9155         },
+{       971     *OVERSAMPLENR,  24.886          },
+{       981     *OVERSAMPLENR,  18.9635         },
+{       991     *OVERSAMPLENR,  11.8565         },
+{       1001    *OVERSAMPLENR,  2.3805          },
+{       1021    *OVERSAMPLENR,  -40.2615        }
 };
 #endif
 //{SD Patch} End

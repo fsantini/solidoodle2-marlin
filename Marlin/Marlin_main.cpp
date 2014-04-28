@@ -1357,6 +1357,17 @@ void process_commands()
             #if Z_MIN_PIN == -1
             #error "You must have a Z_MIN endstop in order to enable Auto Bed Leveling feature!!! Z_MIN_PIN must point to a valid hardware pin."
             #endif
+            
+            // FS: set z offset in gcode
+            if (code_seen(axis_codes[Z_AXIS]))
+            {
+                zprobe_zoffset = code_value();
+                SERIAL_ECHO_START;
+                SERIAL_ECHOPAIR("Setting Z probe offset to ", zprobe_zoffset);
+                SERIAL_ECHOLN("");
+                SERIAL_ECHOLN("Call M500 to store permanently");
+                break; // don't do anything else in this case
+            }
 
             st_synchronize();
             // make sure the bed_level_rotation_matrix is identity or the planner will get it incorectly

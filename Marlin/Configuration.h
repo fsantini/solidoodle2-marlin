@@ -134,10 +134,10 @@
 #define TEMP_SENSOR_0 1		//{SD Patch}
 #define TEMP_SENSOR_1 -1
 #define TEMP_SENSOR_2 0
-#define TEMP_SENSOR_BED 1	//{SD Patch}
+#define TEMP_SENSOR_BED 80 //1	//{SD Patch}
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
-//#define TEMP_SENSOR_1_AS_REDUNDANT
+//#define TEMP_SENSOR_1_AS_REDUNDANTa
 #define MAX_REDUNDANT_TEMP_SENSOR_DIFF 10
 
 // This makes temp sensor 1 a redundant sensor for sensor 0. If the temperatures difference between these sensors is to high the print will be aborted.
@@ -216,7 +216,7 @@
 // If your configuration is significantly different than this and you don't understand the issues involved, you probably
 // shouldn't use bed PID until someone else verifies your hardware works.
 // If this is enabled, find your own PID constants below.
-//#define PIDTEMPBED
+#define PIDTEMPBED
 //
 //#define BED_LIMIT_SWITCHING
 
@@ -240,9 +240,9 @@
 //    #define  DEFAULT_bedKd 1675.16
 //Solidoodle3 Standard Bed //{SD Patch}
 //from pidautotune //{SD Patch}
-    #define  DEFAULT_bedKp 100.15 //{SD Patch}
-    #define  DEFAULT_bedKi 7.65 //{SD Patch}
-    #define  DEFAULT_bedKd 327.90 //{SD Patch}
+    #define  DEFAULT_bedKp 348.26 //{SD Patch}
+    #define  DEFAULT_bedKi 47.45 //{SD Patch}
+    #define  DEFAULT_bedKd 639.06 //{SD Patch}
 
 //Replicator MK2B Heat Bed //{SD Patch}
 //from pidautotune //{SD Patch}
@@ -345,7 +345,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 //============================= Bed Auto Leveling ===========================
 
-#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
+//#define ENABLE_AUTO_BED_LEVELING // Delete the comment to enable (remove // at the start of the line)
 
 #ifdef ENABLE_AUTO_BED_LEVELING
 

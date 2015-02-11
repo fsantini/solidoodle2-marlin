@@ -4,8 +4,8 @@ applet/
 *.orig
 *.rej
 *.bak
-/arduino
-/Libraries
+*.DS_Store
+*.idea
 /Release
 /.cproject
 /.project

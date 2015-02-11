@@ -2964,7 +2964,7 @@ Sigma_Exit:
         
         if (code_seen('S')) temp_override[tmp_extruder] = code_value();
         if (code_seen('B')) bed_temp_override = code_value();
-        if (code_seen('F') && code_value() > 0.0) flowmult[tmp_extruder] = code_value();
+        if (code_seen('F') && code_value() > 0.0) filament_flowmult[tmp_extruder] = code_value();
         
         if(code_seen('D')) {
           float diameter = code_value();

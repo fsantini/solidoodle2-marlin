@@ -55,7 +55,7 @@ volatile static unsigned long step_events_completed; // The number of step event
 #ifdef ADVANCE
   static long advance_rate, advance, final_advance = 0;
   static long old_advance = 0;
-  static long e_steps[3];
+  static long e_steps[4];
 #endif
 static long acceleration_time, deceleration_time;
 //static unsigned long accelerate_until, decelerate_after, acceleration_rate, initial_rate, final_rate, nominal_rate;
@@ -200,6 +200,8 @@ void checkHitEndstops()
      setTargetHotend0(0);
      setTargetHotend1(0);
      setTargetHotend2(0);
+     setTargetHotend3(0);
+     setTargetBed(0);
    }
 #endif
  }
@@ -237,12 +239,6 @@ void st_wake_up() {
   //  TCNT1 = 0;
   ENABLE_STEPPER_DRIVER_INTERRUPT();
 }
-
-void step_wait(){
-    for(int8_t i=0; i < 6; i++){
-    }
-}
-
 
 FORCE_INLINE unsigned short calc_timer(unsigned short step_rate) {
   unsigned short timer;
@@ -304,7 +300,7 @@ FORCE_INLINE void trapezoid_generator_reset() {
 //    SERIAL_ECHOPGM("advance rate :");
 //    SERIAL_ECHO(current_block->advance_rate/256.0);
 //    SERIAL_ECHOPGM("initial advance :");
-//  SERIAL_ECHO(current_block->initial_advance/256.0);
+//    SERIAL_ECHO(current_block->initial_advance/256.0);
 //    SERIAL_ECHOPGM("final advance :");
 //    SERIAL_ECHOLN(current_block->final_advance/256.0);
 
@@ -558,7 +554,59 @@ ISR(TIMER1_COMPA_vect)
       }
       #endif //ADVANCE
 
-        counter_x += current_block->steps_x;
+      counter_x += current_block->steps_x;
+#ifdef CONFIG_STEPPERS_TOSHIBA
+	/* The toshiba stepper controller require much longer pulses
+	 * tjerfore we 'stage' decompose the pulses between high, and
+	 * low instead of doing each in turn. The extra tests add enough
+	 * lag to allow it work with without needing NOPs */ 
+      if (counter_x > 0) {
+        WRITE(X_STEP_PIN, HIGH);
+      }
+
+      counter_y += current_block->steps_y;
+      if (counter_y > 0) {
+        WRITE(Y_STEP_PIN, HIGH);
+      }
+
+      counter_z += current_block->steps_z;
+      if (counter_z > 0) {
+        WRITE(Z_STEP_PIN, HIGH);
+      }
+
+      #ifndef ADVANCE
+        counter_e += current_block->steps_e;
+        if (counter_e > 0) {
+          WRITE_E_STEP(HIGH);
+        }
+      #endif //!ADVANCE
+
+      if (counter_x > 0) {
+        counter_x -= current_block->step_event_count;
+        count_position[X_AXIS]+=count_direction[X_AXIS];   
+        WRITE(X_STEP_PIN, LOW);
+      }
+
+      if (counter_y > 0) {
+        counter_y -= current_block->step_event_count;
+        count_position[Y_AXIS]+=count_direction[Y_AXIS];
+        WRITE(Y_STEP_PIN, LOW);
+      }
+
+      if (counter_z > 0) {
+        counter_z -= current_block->step_event_count;
+        count_position[Z_AXIS]+=count_direction[Z_AXIS];
+        WRITE(Z_STEP_PIN, LOW);
+      }
+
+      #ifndef ADVANCE
+        if (counter_e > 0) {
+          counter_e -= current_block->step_event_count;
+          count_position[E_AXIS]+=count_direction[E_AXIS];
+          WRITE_E_STEP(LOW);
+        }
+      #endif //!ADVANCE
+#else
         if (counter_x > 0) {
         #ifdef DUAL_X_CARRIAGE
           if (extruder_duplication_enabled){
@@ -635,6 +683,7 @@ ISR(TIMER1_COMPA_vect)
           WRITE_E_STEP(INVERT_E_STEP_PIN);
         }
       #endif //!ADVANCE
+#endif // CONFIG_STEPPERS_TOSHIBA
       step_events_completed += 1;
       if(step_events_completed >= current_block->step_event_count) break;
     }
@@ -760,6 +809,22 @@ ISR(TIMER1_COMPA_vect)
         }
       }
  #endif
+ #if EXTRUDERS > 3
+      if (e_steps[3] != 0) {
+        WRITE(E3_STEP_PIN, INVERT_E_STEP_PIN);
+        if (e_steps[3] < 0) {
+          WRITE(E3_DIR_PIN, INVERT_E3_DIR);
+          e_steps[3]++;
+          WRITE(E3_STEP_PIN, !INVERT_E_STEP_PIN);
+        }
+        else if (e_steps[3] > 0) {
+          WRITE(E3_DIR_PIN, !INVERT_E3_DIR);
+          e_steps[3]--;
+          WRITE(E3_STEP_PIN, !INVERT_E_STEP_PIN);
+        }
+      }
+ #endif
+
     }
   }
 #endif // ADVANCE
@@ -798,6 +863,9 @@ void st_init()
   #endif
   #if defined(E2_DIR_PIN) && (E2_DIR_PIN > -1)
     SET_OUTPUT(E2_DIR_PIN);
+  #endif
+  #if defined(E3_DIR_PIN) && (E3_DIR_PIN > -1)
+    SET_OUTPUT(E3_DIR_PIN);
   #endif
 
   //Initialize Enable Pins - steppers default to disabled.
@@ -839,6 +907,10 @@ void st_init()
   #if defined(E2_ENABLE_PIN) && (E2_ENABLE_PIN > -1)
     SET_OUTPUT(E2_ENABLE_PIN);
     if(!E_ENABLE_ON) WRITE(E2_ENABLE_PIN,HIGH);
+  #endif
+  #if defined(E3_ENABLE_PIN) && (E3_ENABLE_PIN > -1)
+    SET_OUTPUT(E3_ENABLE_PIN);
+    if(!E_ENABLE_ON) WRITE(E3_ENABLE_PIN,HIGH);
   #endif
 
   //endstops and pullups
@@ -930,6 +1002,11 @@ void st_init()
     WRITE(E2_STEP_PIN,INVERT_E_STEP_PIN);
     disable_e2();
   #endif
+  #if defined(E3_STEP_PIN) && (E3_STEP_PIN > -1)
+    SET_OUTPUT(E3_STEP_PIN);
+    WRITE(E3_STEP_PIN,INVERT_E_STEP_PIN);
+    disable_e3();
+  #endif
 
   // waveform generation = 0100 = CTC
   TCCR1B &= ~(1<<WGM13);
@@ -960,6 +1037,7 @@ void st_init()
     e_steps[0] = 0;
     e_steps[1] = 0;
     e_steps[2] = 0;
+    e_steps[3] = 0;
     TIMSK0 |= (1<<OCIE0A);
   #endif //ADVANCE
 
@@ -1021,6 +1099,7 @@ void finishAndDisableSteppers()
   disable_e0();
   disable_e1();
   disable_e2();
+  disable_e3();
 }
 
 void quickStop()
@@ -1057,9 +1136,9 @@ void babystep(const uint8_t axis,const bool direction)
     #ifdef DUAL_X_CARRIAGE
       WRITE(X2_STEP_PIN, !INVERT_X_STEP_PIN);
     #endif
-    {
-    float x=1./float(axis+1)/float(axis+2); //wait a tiny bit
-    }
+
+    _delay_us(1U); // wait 1 microsecond
+
     WRITE(X_STEP_PIN, INVERT_X_STEP_PIN);
     #ifdef DUAL_X_CARRIAGE
       WRITE(X2_STEP_PIN, INVERT_X_STEP_PIN);
@@ -1089,9 +1168,9 @@ void babystep(const uint8_t axis,const bool direction)
     #ifdef DUAL_Y_CARRIAGE
       WRITE(Y2_STEP_PIN, !INVERT_Y_STEP_PIN);
     #endif
-    {
-    float x=1./float(axis+1)/float(axis+2); //wait a tiny bit
-    }
+
+    _delay_us(1U); // wait 1 microsecond
+
     WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN);
     #ifdef DUAL_Y_CARRIAGE
       WRITE(Y2_STEP_PIN, INVERT_Y_STEP_PIN);
@@ -1121,10 +1200,9 @@ void babystep(const uint8_t axis,const bool direction)
     #ifdef Z_DUAL_STEPPER_DRIVERS
       WRITE(Z2_STEP_PIN, !INVERT_Z_STEP_PIN);
     #endif
-    //wait a tiny bit
-    {
-    float x=1./float(axis+1); //absolutely useless
-    }
+
+    _delay_us(1U); // wait 1 microsecond
+
     WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
     #ifdef Z_DUAL_STEPPER_DRIVERS
       WRITE(Z2_STEP_PIN, INVERT_Z_STEP_PIN);
@@ -1157,10 +1235,8 @@ void babystep(const uint8_t axis,const bool direction)
     WRITE(Y_STEP_PIN, !INVERT_Y_STEP_PIN); 
     WRITE(Z_STEP_PIN, !INVERT_Z_STEP_PIN); 
     
-    //wait a tiny bit
-    {
-    float x=1./float(axis+1); //absolutely useless
-    }
+    _delay_us(1U); // wait 1 microsecond
+
     WRITE(X_STEP_PIN, INVERT_X_STEP_PIN); 
     WRITE(Y_STEP_PIN, INVERT_Y_STEP_PIN); 
     WRITE(Z_STEP_PIN, INVERT_Z_STEP_PIN);
@@ -1241,7 +1317,7 @@ void microstep_init()
   pinMode(Y_MS1_PIN,OUTPUT);
   pinMode(Y_MS2_PIN,OUTPUT);
   pinMode(Z_MS1_PIN,OUTPUT);
-  pinMode(Z_MS2_PIN,OUTPUT);  
+  pinMode(Z_MS2_PIN,OUTPUT);
   pinMode(E0_MS1_PIN,OUTPUT);
   pinMode(E0_MS2_PIN,OUTPUT);
   for(int i=0;i<=4;i++) microstep_mode(i,microstep_modes[i]);

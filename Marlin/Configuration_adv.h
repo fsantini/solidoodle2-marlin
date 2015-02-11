@@ -75,9 +75,10 @@
 // extruder temperature is above/below EXTRUDER_AUTO_FAN_TEMPERATURE.
 // Multiple extruders can be assigned to the same pin in which case
 // the fan will turn on when any selected extruder is above the threshold.
-#define EXTRUDER_0_AUTO_FAN_PIN   -1
-#define EXTRUDER_1_AUTO_FAN_PIN   -1
-#define EXTRUDER_2_AUTO_FAN_PIN   -1
+#define EXTRUDER_0_AUTO_FAN_PIN -1
+#define EXTRUDER_1_AUTO_FAN_PIN -1
+#define EXTRUDER_2_AUTO_FAN_PIN -1
+#define EXTRUDER_3_AUTO_FAN_PIN -1
 #define EXTRUDER_AUTO_FAN_TEMPERATURE 50
 #define EXTRUDER_AUTO_FAN_SPEED   255  // == full speed
 
@@ -200,9 +201,6 @@
 // This is the default power-up mode which can be later using M605.
 #define DEFAULT_DUAL_X_CARRIAGE_MODE 0
 
-// As the x-carriages are independent we can now account for any relative Z offset
-#define EXTRUDER1_Z_OFFSET 0.0           // z offset relative to extruder 0
-
 // Default settings in "Auto-park Mode"
 #define TOOLCHANGE_PARK_ZLIFT   0.2      // the distance to raise Z axis when parking an extruder
 #define TOOLCHANGE_UNPARK_ZLIFT 1        // the distance to raise Z axis when unparking an extruder
@@ -219,16 +217,18 @@
 #define QUICK_HOME  //if this is defined, if both x and y are to be homed, a diagonal move will be performed initially.
 
 #define AXIS_RELATIVE_MODES {false, false, false, false}
-
+#ifdef CONFIG_STEPPERS_TOSHIBA
+#define MAX_STEP_FREQUENCY 10000 // Max step frequency for Toshiba Stepper Controllers
+#else
 #define MAX_STEP_FREQUENCY 40000 // Max step frequency for Ultimaker (5000 pps / half step)
-
+#endif
 //By default pololu step drivers require an active high signal. However, some high power drivers require an active low signal as step.
 #define INVERT_X_STEP_PIN false
 #define INVERT_Y_STEP_PIN false
 #define INVERT_Z_STEP_PIN false
 #define INVERT_E_STEP_PIN false
 
-//default stepper release if idle
+//default stepper release if idle. Set to 0 to deactivate.
 #define DEFAULT_STEPPER_DEACTIVE_TIME 60
 
 #define DEFAULT_MINIMUMFEEDRATE       0.0     // minimum feedrate
@@ -295,6 +295,26 @@
 // using:
 //#define MENU_ADDAUTOSTART
 
+// Show a progress bar on HD44780 LCDs for SD printing
+//#define LCD_PROGRESS_BAR
+
+#ifdef LCD_PROGRESS_BAR
+  // Amount of time (ms) to show the bar
+  #define PROGRESS_BAR_BAR_TIME 2000
+  // Amount of time (ms) to show the status message
+  #define PROGRESS_BAR_MSG_TIME 3000
+  // Amount of time (ms) to retain the status message (0=forever)
+  #define PROGRESS_MSG_EXPIRE   0
+  // Enable this to show messages for MSG_TIME then hide them
+  //#define PROGRESS_MSG_ONCE
+  #ifdef DOGLCD
+    #warning LCD_PROGRESS_BAR does not apply to graphical displays at this time.
+  #endif
+  #ifdef FILAMENT_LCD_DISPLAY
+    #error LCD_PROGRESS_BAR and FILAMENT_LCD_DISPLAY are not fully compatible. Comment out this line to use both.
+  #endif
+#endif
+
 // The hardware watchdog should reset the microcontroller disabling all outputs, in case the firmware gets stuck and doesn't do temperature regulation.
 //#define USE_WATCHDOG
 
@@ -330,7 +350,7 @@
 
 // extruder advance constant (s2/mm3)
 //
-// advance (steps) = STEPS_PER_CUBIC_MM_E * EXTUDER_ADVANCE_K * cubic mm per second ^ 2
+// advance (steps) = STEPS_PER_CUBIC_MM_E * EXTRUDER_ADVANCE_K * cubic mm per second ^ 2
 //
 // Hooke's law says:		force = k * distance
 // Bernoulli's principle says:	v ^ 2 / 2 + g . h + pressure / density = constant
@@ -342,8 +362,8 @@
 
   #define D_FILAMENT 2.85
   #define STEPS_MM_E 836
-  #define EXTRUTION_AREA (0.25 * D_FILAMENT * D_FILAMENT * 3.14159)
-  #define STEPS_PER_CUBIC_MM_E (axis_steps_per_unit[E_AXIS]/ EXTRUTION_AREA)
+  #define EXTRUSION_AREA (0.25 * D_FILAMENT * D_FILAMENT * 3.14159)
+  #define STEPS_PER_CUBIC_MM_E (axis_steps_per_unit[E_AXIS]/ EXTRUSION_AREA)
 
 #endif // ADVANCE
 
@@ -439,6 +459,11 @@ const unsigned int dropsegments=5; //everything with less than this number of st
 //===========================================================================
 //=============================  Define Defines  ============================
 //===========================================================================
+
+#if defined (ENABLE_AUTO_BED_LEVELING) && defined (DELTA)
+  #error "Bed Auto Leveling is still not compatible with Delta Kinematics."
+#endif
+
 #if EXTRUDERS > 1 && defined TEMP_SENSOR_1_AS_REDUNDANT
   #error "You cannot use TEMP_SENSOR_1_AS_REDUNDANT if EXTRUDERS > 1"
 #endif
@@ -459,6 +484,10 @@ const unsigned int dropsegments=5; //everything with less than this number of st
   #define THERMISTORHEATER_2 TEMP_SENSOR_2
   #define HEATER_2_USES_THERMISTOR
 #endif
+#if TEMP_SENSOR_3 > 0
+  #define THERMISTORHEATER_3 TEMP_SENSOR_3
+  #define HEATER_3_USES_THERMISTOR
+#endif
 #if TEMP_SENSOR_BED > 0
   #define THERMISTORBED TEMP_SENSOR_BED
   #define BED_USES_THERMISTOR
@@ -471,6 +500,9 @@ const unsigned int dropsegments=5; //everything with less than this number of st
 #endif
 #if TEMP_SENSOR_2 == -1
   #define HEATER_2_USES_AD595
+#endif
+#if TEMP_SENSOR_3 == -1
+  #define HEATER_3_USES_AD595
 #endif
 #if TEMP_SENSOR_BED == -1
   #define BED_USES_AD595
@@ -489,6 +521,10 @@ const unsigned int dropsegments=5; //everything with less than this number of st
 #if TEMP_SENSOR_2 == 0
   #undef HEATER_2_MINTEMP
   #undef HEATER_2_MAXTEMP
+#endif
+#if TEMP_SENSOR_3 == 0
+  #undef HEATER_3_MINTEMP
+  #undef HEATER_3_MAXTEMP
 #endif
 #if TEMP_SENSOR_BED == 0
   #undef BED_MINTEMP
